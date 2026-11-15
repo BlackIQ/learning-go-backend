@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/BlackIQ/gin-todo/internal/handlers"
+	"github.com/BlackIQ/gin-todo/internal/middlewares"
 )
 
 func SetupRouter() *gin.Engine {
@@ -19,13 +20,15 @@ func SetupRouter() *gin.Engine {
 	todoRouter.PATCH("/:id", handlers.UpdateTodo)
 	todoRouter.DELETE("/:id", handlers.DeleteTodo)
 
-	noteHandler := apiRouter.Group("/notes")
+	noteRouter := apiRouter.Group("/notes")
 
-	noteHandler.GET("", handlers.ListNotes)
-	noteHandler.GET("/:id", handlers.GetNote)
-	noteHandler.POST("", handlers.CreateNote)
-	noteHandler.PATCH("/:id", handlers.UpdateNote)
-	noteHandler.DELETE("/:id", handlers.DeleteNote)
+	noteRouter.Use(middlewares.RoleRequired())
+
+	noteRouter.GET("", handlers.ListNotes)
+	noteRouter.GET("/:id", handlers.GetNote)
+	noteRouter.POST("", handlers.CreateNote)
+	noteRouter.PATCH("/:id", handlers.UpdateNote)
+	noteRouter.DELETE("/:id", handlers.DeleteNote)
 
 	return router
 }
