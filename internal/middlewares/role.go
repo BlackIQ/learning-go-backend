@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/BlackIQ/gin-todo/internal/responses"
+	"gin-basics/internal/responses"
 )
 
 func RoleRequired() gin.HandlerFunc {

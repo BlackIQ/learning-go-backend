@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/BlackIQ/gin-todo/internal/router"
+	"gin-basics/internal/router"
 )
 
 func main() {

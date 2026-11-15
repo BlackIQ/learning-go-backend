@@ -1,4 +1,4 @@
-module github.com/BlackIQ/gin-todo
+module gin-basics
 
 go 1.26.4
 

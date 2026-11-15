@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/BlackIQ/gin-todo/internal/models"
-	"github.com/BlackIQ/gin-todo/internal/responses"
+	"gin-basics/internal/models"
+	"gin-basics/internal/responses"
 )
 
 var notes = []*models.Note{}

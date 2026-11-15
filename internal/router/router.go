@@ -3,8 +3,8 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/BlackIQ/gin-todo/internal/handlers"
-	"github.com/BlackIQ/gin-todo/internal/middlewares"
+	"gin-basics/internal/handlers"
+	"gin-basics/internal/middlewares"
 )
 
 func SetupRouter() *gin.Engine {
