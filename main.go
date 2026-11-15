@@ -2,40 +2,42 @@ package main
 
 import (
 	"fmt"
-	"strconv"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type Todo struct {
-	ID      int    `json:"id"`
-	Title   string `json:"title" binding:"required"`
-	Details string `json:"details" binding:"required"`
+	ID      uuid.UUID `json:"id"`
+	Title   string    `json:"title" binding:"required"`
+	Details string    `json:"details" binding:"required"`
 }
 
 var todos = []Todo{}
 
-func nextID() (id int) {
-	return len(todos) + 1
-}
-
 func Home(c *gin.Context) {
 	c.JSON(
-		200,
-		gin.H{"message": "Home page"},
+		http.StatusOK,
+		gin.H{
+			"message": "Home page",
+		},
 	)
 }
 
 func listTodos(c *gin.Context) {
-	c.JSON(200, todos)
+	c.JSON(
+		http.StatusOK,
+		todos,
+	)
 }
 
 func getTodo(c *gin.Context) {
-	todoId, err := strconv.Atoi(c.Param("id"))
+	todoId, err := uuid.Parse(c.Param("id"))
 
 	if err != nil {
 		c.JSON(
-			409,
+			http.StatusBadRequest,
 			gin.H{
 				"error": "Invalid ID",
 			},
@@ -45,15 +47,16 @@ func getTodo(c *gin.Context) {
 
 	for i, todo := range todos {
 		if todoId == todo.ID {
-			c.JSON(200, todos[i])
+			c.JSON(
+				http.StatusOK,
+				todos[i],
+			)
 			return
-		} else {
-			continue
 		}
 	}
 
 	c.JSON(
-		404,
+		http.StatusNotFound,
 		gin.H{
 			"error": "Todo not found",
 		},
@@ -65,7 +68,7 @@ func createTodo(c *gin.Context) {
 
 	if err := c.ShouldBindBodyWithJSON(&newTodo); err != nil {
 		c.JSON(
-			400,
+			http.StatusConflict,
 			gin.H{
 				"error": err.Error(),
 			},
@@ -73,19 +76,22 @@ func createTodo(c *gin.Context) {
 		return
 	}
 
-	newTodo.ID = nextID()
+	newTodo.ID = uuid.New()
 
 	todos = append(todos, newTodo)
 
-	c.JSON(201, newTodo)
+	c.JSON(
+		http.StatusCreated,
+		newTodo,
+	)
 }
 
 func updateTodo(c *gin.Context) {
-	todoId, err := strconv.Atoi(c.Param("id"))
+	todoId, err := uuid.Parse(c.Param("id"))
 
 	if err != nil {
 		c.JSON(
-			409,
+			http.StatusBadRequest,
 			gin.H{
 				"error": "Invalid ID",
 			},
@@ -97,7 +103,7 @@ func updateTodo(c *gin.Context) {
 
 	if err := c.ShouldBindBodyWithJSON(&updateTodo); err != nil {
 		c.JSON(
-			400,
+			http.StatusConflict,
 			gin.H{
 				"error": err.Error(),
 			},
@@ -110,15 +116,16 @@ func updateTodo(c *gin.Context) {
 			updateTodo.ID = todoId
 			todos[i] = updateTodo
 
-			c.JSON(200, todos[i])
+			c.JSON(
+				http.StatusOK,
+				todos[i],
+			)
 			return
-		} else {
-			continue
 		}
 	}
 
 	c.JSON(
-		404,
+		http.StatusNotFound,
 		gin.H{
 			"error": "Todo not found",
 		},
@@ -126,11 +133,11 @@ func updateTodo(c *gin.Context) {
 }
 
 func deleteTodo(c *gin.Context) {
-	todoId, err := strconv.Atoi(c.Param("id"))
+	todoId, err := uuid.Parse(c.Param("id"))
 
 	if err != nil {
 		c.JSON(
-			409,
+			http.StatusBadRequest,
 			gin.H{
 				"error": "Invalid ID",
 			},
@@ -142,15 +149,15 @@ func deleteTodo(c *gin.Context) {
 		if todoId == todo.ID {
 			todos = append(todos[:i], todos[i+1:]...)
 
-			c.JSON(204, gin.H{})
+			c.Status(
+				http.StatusNoContent,
+			)
 			return
-		} else {
-			continue
 		}
 	}
 
 	c.JSON(
-		404,
+		http.StatusNotFound,
 		gin.H{
 			"error": "Todo not found",
 		},
