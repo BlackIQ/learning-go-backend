@@ -1,158 +1,229 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 
+	"gin-basics/internal/dto"
+	"gin-basics/internal/inits"
 	"gin-basics/internal/models"
 	"gin-basics/internal/responses"
 )
 
-var todos = []models.Todo{}
-
 func ListTodos(c *gin.Context) {
-	responses.OK(
-		c,
-		http.StatusOK,
-		todos,
-	)
+	var todos []models.Todo
+
+	result := inits.DB.Find(&todos)
+
+	if result.Error != nil {
+		responses.Fail(
+			c,
+			http.StatusInternalServerError,
+			"DATABASE_ERROR",
+			result.Error.Error(),
+		)
+		return
+	}
+
+	responses.OK(c, http.StatusOK, todos)
 }
 
 func GetTodo(c *gin.Context) {
-	todoId, err := uuid.Parse(c.Param("id"))
+	todoID, err := uuid.Parse(c.Param("id"))
 
 	if err != nil {
 		responses.Fail(
 			c,
 			http.StatusBadRequest,
-			"BadRequest",
-			"Invalid ID provided",
+			"INVALID_ID",
+			"Invalid todo ID",
 		)
 		return
 	}
 
-	for i, todo := range todos {
-		if todoId == todo.ID {
-			responses.OK(
-				c,
-				http.StatusOK,
-				todos[i],
-			)
-			return
-		}
+	var todo models.Todo
+
+	result := inits.DB.First(&todo, "id = ?", todoID)
+
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		responses.Fail(
+			c,
+			http.StatusNotFound,
+			"TODO_NOT_FOUND",
+			"Todo not found",
+		)
+		return
 	}
 
-	responses.Fail(
-		c,
-		http.StatusNotFound,
-		"NotFound",
-		"Todo is not found",
-	)
+	if result.Error != nil {
+		responses.Fail(
+			c,
+			http.StatusInternalServerError,
+			"DATABASE_ERROR",
+			result.Error.Error(),
+		)
+		return
+	}
+
+	responses.OK(c, http.StatusOK, todo)
 }
 
 func CreateTodo(c *gin.Context) {
-	var newTodo *models.Todo
+	var request dto.CreateTodoRequest
 
-	if err := c.ShouldBindBodyWithJSON(&newTodo); err != nil {
+	if err := c.ShouldBindJSON(&request); err != nil {
 		responses.Fail(
 			c,
-			http.StatusConflict,
-			"Conflict",
-			"Invalid schema",
+			http.StatusBadRequest,
+			"INVALID_SCHEMA",
+			err.Error(),
 		)
 		return
 	}
 
-	newTodo.ID = uuid.New()
+	todo := models.Todo{
+		ID:      uuid.New(),
+		Title:   request.Title,
+		Details: request.Details,
+	}
 
-	todos = append(todos, *newTodo)
+	result := inits.DB.Create(&todo)
 
-	responses.OK(
-		c,
-		http.StatusCreated,
-		newTodo,
-	)
+	if result.Error != nil {
+		responses.Fail(
+			c,
+			http.StatusInternalServerError,
+			"DATABASE_ERROR",
+			result.Error.Error(),
+		)
+		return
+	}
+
+	responses.OK(c, http.StatusCreated, todo)
 }
 
 func UpdateTodo(c *gin.Context) {
-	todoId, err := uuid.Parse(c.Param("id"))
+	todoID, err := uuid.Parse(c.Param("id"))
 
 	if err != nil {
 		responses.Fail(
 			c,
 			http.StatusBadRequest,
-			"BadRequest",
-			"Invalid ID provided",
+			"INVALID_ID",
+			"Invalid todo ID",
 		)
 		return
 	}
 
-	var updateTodo *models.Todo
+	var request dto.UpdateTodoRequest
 
-	if err := c.ShouldBindBodyWithJSON(&updateTodo); err != nil {
+	if err := c.ShouldBindJSON(&request); err != nil {
 		responses.Fail(
 			c,
-			http.StatusConflict,
-			"Conflict",
-			"Invalid schema",
+			http.StatusBadRequest,
+			"INVALID_SCHEMA",
+			err.Error(),
 		)
 		return
 	}
 
-	for i, todo := range todos {
-		if todoId == todo.ID {
-			updateTodo.ID = todoId
-			todos[i] = *updateTodo
+	updates := map[string]any{}
 
-			responses.OK(
-				c,
-				http.StatusOK,
-				notes[i],
-			)
-			return
-		}
+	if request.Title != nil {
+		updates["title"] = *request.Title
 	}
 
-	responses.Fail(
-		c,
-		http.StatusNotFound,
-		"NotFound",
-		"Todo is not found",
-	)
+	if request.Details != nil {
+		updates["description"] = *request.Details
+	}
+
+	if len(updates) == 0 {
+		responses.Fail(
+			c,
+			http.StatusBadRequest,
+			"EMPTY_UPDATE",
+			"No fields provided for update",
+		)
+		return
+	}
+
+	result := inits.DB.Model(&models.Todo{}).
+		Where("id = ?", todoID).
+		Updates(updates)
+
+	if result.Error != nil {
+		responses.Fail(
+			c,
+			http.StatusInternalServerError,
+			"DATABASE_ERROR",
+			result.Error.Error(),
+		)
+		return
+	}
+
+	if result.RowsAffected == 0 {
+		responses.Fail(
+			c,
+			http.StatusNotFound,
+			"TODO_NOT_FOUND",
+			"Todo not found",
+		)
+		return
+	}
+
+	var updatedTodo models.Todo
+
+	if err := inits.DB.First(&updatedTodo, "id = ?", todoID).Error; err != nil {
+		responses.Fail(
+			c,
+			http.StatusInternalServerError,
+			"DATABASE_ERROR",
+			err.Error(),
+		)
+		return
+	}
+
+	responses.OK(c, http.StatusOK, updatedTodo)
 }
 
 func DeleteTodo(c *gin.Context) {
-	todoId, err := uuid.Parse(c.Param("id"))
+	todoID, err := uuid.Parse(c.Param("id"))
 
 	if err != nil {
 		responses.Fail(
 			c,
 			http.StatusBadRequest,
-			"BadRequest",
-			"Invalid ID provided",
+			"INVALID_ID",
+			"Invalid todo ID",
 		)
 		return
 	}
 
-	for i, todo := range todos {
-		if todoId == todo.ID {
-			todos = append(todos[:i], todos[i+1:]...)
+	result := inits.DB.Delete(&models.Todo{}, "id = ?", todoID)
 
-			responses.OK(
-				c,
-				http.StatusNoContent,
-				nil,
-			)
-			return
-		}
+	if result.Error != nil {
+		responses.Fail(
+			c,
+			http.StatusInternalServerError,
+			"DATABASE_ERROR",
+			result.Error.Error(),
+		)
+		return
 	}
 
-	responses.Fail(
-		c,
-		http.StatusNotFound,
-		"NotFound",
-		"Todo is not found",
-	)
+	if result.RowsAffected == 0 {
+		responses.Fail(
+			c,
+			http.StatusNotFound,
+			"TODO_NOT_FOUND",
+			"Todo not found",
+		)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }
