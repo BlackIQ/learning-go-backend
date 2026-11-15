@@ -10,6 +10,10 @@ import (
 func SetupRouter() *gin.Engine {
 	router := gin.Default()
 
+	router.Use(middlewares.Request())
+
+	router.GET("/", handlers.Home)
+
 	apiRouter := router.Group("/api")
 
 	todoRouter := apiRouter.Group("/todos")
