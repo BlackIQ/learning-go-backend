@@ -14,7 +14,14 @@ type Todo struct {
 	Details string    `json:"details" binding:"required"`
 }
 
+type Note struct {
+	ID          uuid.UUID `json:"id"`
+	Title       string    `json:"title" binding:"required"`
+	Description string    `json:"description" binding:"required"`
+}
+
 var todos = []Todo{}
+var notes = []Note{}
 
 func Home(c *gin.Context) {
 	c.JSON(
@@ -164,16 +171,181 @@ func deleteTodo(c *gin.Context) {
 	)
 }
 
-func main() {
+func listNotes(c *gin.Context) {
+	c.JSON(
+		http.StatusOK,
+		notes,
+	)
+}
+
+func getNote(c *gin.Context) {
+	noteId, err := uuid.Parse(c.Param("id"))
+
+	if err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{
+				"error": "Invalid ID",
+			},
+		)
+		return
+	}
+
+	for i, note := range notes {
+		if noteId == note.ID {
+			c.JSON(
+				http.StatusOK,
+				notes[i],
+			)
+			return
+		}
+	}
+
+	c.JSON(
+		http.StatusNotFound,
+		gin.H{
+			"error": "Note not found",
+		},
+	)
+}
+
+func createNote(c *gin.Context) {
+	var newNote Note
+
+	if err := c.ShouldBindBodyWithJSON(&newNote); err != nil {
+		c.JSON(
+			http.StatusConflict,
+			gin.H{
+				"error": err.Error(),
+			},
+		)
+		return
+	}
+
+	newNote.ID = uuid.New()
+
+	notes = append(notes, newNote)
+
+	c.JSON(
+		http.StatusCreated,
+		newNote,
+	)
+}
+
+func updateNote(c *gin.Context) {
+	noteId, err := uuid.Parse(c.Param("id"))
+
+	if err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{
+				"error": "Invalid ID",
+			},
+		)
+		return
+	}
+
+	var updateNote Note
+
+	if err := c.ShouldBindBodyWithJSON(&updateNote); err != nil {
+		c.JSON(
+			http.StatusConflict,
+			gin.H{
+				"error": err.Error(),
+			},
+		)
+		return
+	}
+
+	for i, note := range notes {
+		if noteId == note.ID {
+			updateNote.ID = noteId
+			notes[i] = updateNote
+
+			c.JSON(
+				http.StatusOK,
+				notes[i],
+			)
+			return
+		}
+	}
+
+	c.JSON(
+		http.StatusNotFound,
+		gin.H{
+			"error": "Note not found",
+		},
+	)
+}
+
+func deleteNote(c *gin.Context) {
+	noteId, err := uuid.Parse(c.Param("id"))
+
+	if err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{
+				"error": "Invalid ID",
+			},
+		)
+		return
+	}
+
+	for i, note := range notes {
+		if noteId == note.ID {
+			notes = append(notes[:i], notes[i+1:]...)
+
+			c.Status(
+				http.StatusNoContent,
+			)
+			return
+		}
+	}
+
+	c.JSON(
+		http.StatusNotFound,
+		gin.H{
+			"error": "Todo not found",
+		},
+	)
+}
+
+func setupRouter() *gin.Engine {
 	router := gin.Default()
 
 	router.GET("/", Home)
 
-	router.GET("/todos", listTodos)         // List Todos
-	router.GET("/todos/:id", getTodo)       // One Todo
-	router.POST("/todos", createTodo)       // Create Todo
-	router.PATCH("todos/:id", updateTodo)   // Update Todo
-	router.DELETE("/todos/:id", deleteTodo) // Delete Todo
+	metaRouter := router.Group("/meta")
+	{
+		metaRouter.GET("health", func(c *gin.Context) {
+			c.Status(http.StatusOK)
+		})
+	}
+
+	apiRouter := router.Group("/api")
+	{
+		todoRouter := apiRouter.Group("/todos")
+
+		todoRouter.GET("", listTodos)
+		todoRouter.GET("/:id", getTodo)
+		todoRouter.POST("", createTodo)
+		todoRouter.PATCH("/:id", updateTodo)
+		todoRouter.DELETE("/:id", deleteTodo)
+
+		noteRouter := apiRouter.Group("/notes")
+
+		noteRouter.GET("", listNotes)
+		noteRouter.GET("/:id", getNote)
+		noteRouter.POST("", createNote)
+		noteRouter.PATCH("/:id", updateNote)
+		noteRouter.DELETE("/:id", deleteNote)
+	}
+
+	return router
+}
+
+func main() {
+	router := setupRouter()
 
 	err := router.Run("0.0.0.0:8080")
 
