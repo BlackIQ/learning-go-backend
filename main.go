@@ -1,10 +1,16 @@
 package main
 
 import (
-	"fmt"
+	"log"
 
+	"gin-basics/internal/inits"
 	"gin-basics/internal/router"
 )
+
+func init() {
+	inits.LoadDotEnv()
+	inits.ConnectDatabase()
+}
 
 func main() {
 	r := router.SetupRouter()
@@ -12,7 +18,7 @@ func main() {
 	err := r.Run("0.0.0.0:8080")
 
 	if err != nil {
-		fmt.Println("\n-> Error running the app.")
-		fmt.Print(err)
+		log.Fatal("\n-> Error: Running Gin")
+		log.Fatal(err)
 	}
 }
