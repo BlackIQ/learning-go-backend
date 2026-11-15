@@ -7,12 +7,14 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/BlackIQ/gin-todo/internal/models"
+	"github.com/BlackIQ/gin-todo/internal/responses"
 )
 
 var todos = []models.Todo{}
 
 func ListTodos(c *gin.Context) {
-	c.JSON(
+	responses.OK(
+		c,
 		http.StatusOK,
 		todos,
 	)
@@ -22,18 +24,19 @@ func GetTodo(c *gin.Context) {
 	todoId, err := uuid.Parse(c.Param("id"))
 
 	if err != nil {
-		c.JSON(
+		responses.Fail(
+			c,
 			http.StatusBadRequest,
-			gin.H{
-				"error": "Invalid ID",
-			},
+			"BadRequest",
+			"Invalid ID provided",
 		)
 		return
 	}
 
 	for i, todo := range todos {
 		if todoId == todo.ID {
-			c.JSON(
+			responses.OK(
+				c,
 				http.StatusOK,
 				todos[i],
 			)
@@ -41,11 +44,11 @@ func GetTodo(c *gin.Context) {
 		}
 	}
 
-	c.JSON(
+	responses.Fail(
+		c,
 		http.StatusNotFound,
-		gin.H{
-			"error": "Todo not found",
-		},
+		"NotFound",
+		"Todo is not found",
 	)
 }
 
@@ -53,11 +56,11 @@ func CreateTodo(c *gin.Context) {
 	var newTodo *models.Todo
 
 	if err := c.ShouldBindBodyWithJSON(&newTodo); err != nil {
-		c.JSON(
+		responses.Fail(
+			c,
 			http.StatusConflict,
-			gin.H{
-				"error": err.Error(),
-			},
+			"Conflict",
+			"Invalid schema",
 		)
 		return
 	}
@@ -66,7 +69,8 @@ func CreateTodo(c *gin.Context) {
 
 	todos = append(todos, *newTodo)
 
-	c.JSON(
+	responses.OK(
+		c,
 		http.StatusCreated,
 		newTodo,
 	)
@@ -76,11 +80,11 @@ func UpdateTodo(c *gin.Context) {
 	todoId, err := uuid.Parse(c.Param("id"))
 
 	if err != nil {
-		c.JSON(
+		responses.Fail(
+			c,
 			http.StatusBadRequest,
-			gin.H{
-				"error": "Invalid ID",
-			},
+			"BadRequest",
+			"Invalid ID provided",
 		)
 		return
 	}
@@ -88,11 +92,11 @@ func UpdateTodo(c *gin.Context) {
 	var updateTodo *models.Todo
 
 	if err := c.ShouldBindBodyWithJSON(&updateTodo); err != nil {
-		c.JSON(
+		responses.Fail(
+			c,
 			http.StatusConflict,
-			gin.H{
-				"error": err.Error(),
-			},
+			"Conflict",
+			"Invalid schema",
 		)
 		return
 	}
@@ -102,19 +106,20 @@ func UpdateTodo(c *gin.Context) {
 			updateTodo.ID = todoId
 			todos[i] = *updateTodo
 
-			c.JSON(
+			responses.OK(
+				c,
 				http.StatusOK,
-				todos[i],
+				notes[i],
 			)
 			return
 		}
 	}
 
-	c.JSON(
+	responses.Fail(
+		c,
 		http.StatusNotFound,
-		gin.H{
-			"error": "Todo not found",
-		},
+		"NotFound",
+		"Todo is not found",
 	)
 }
 
@@ -122,11 +127,11 @@ func DeleteTodo(c *gin.Context) {
 	todoId, err := uuid.Parse(c.Param("id"))
 
 	if err != nil {
-		c.JSON(
+		responses.Fail(
+			c,
 			http.StatusBadRequest,
-			gin.H{
-				"error": "Invalid ID",
-			},
+			"BadRequest",
+			"Invalid ID provided",
 		)
 		return
 	}
@@ -135,17 +140,19 @@ func DeleteTodo(c *gin.Context) {
 		if todoId == todo.ID {
 			todos = append(todos[:i], todos[i+1:]...)
 
-			c.Status(
+			responses.OK(
+				c,
 				http.StatusNoContent,
+				nil,
 			)
 			return
 		}
 	}
 
-	c.JSON(
+	responses.Fail(
+		c,
 		http.StatusNotFound,
-		gin.H{
-			"error": "Todo not found",
-		},
+		"NotFound",
+		"Todo is not found",
 	)
 }

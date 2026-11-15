@@ -7,12 +7,14 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/BlackIQ/gin-todo/internal/models"
+	"github.com/BlackIQ/gin-todo/internal/responses"
 )
 
 var notes = []*models.Note{}
 
 func ListNotes(c *gin.Context) {
-	c.JSON(
+	responses.OK(
+		c,
 		http.StatusOK,
 		notes,
 	)
@@ -22,18 +24,19 @@ func GetNote(c *gin.Context) {
 	noteId, err := uuid.Parse(c.Param("id"))
 
 	if err != nil {
-		c.JSON(
+		responses.Fail(
+			c,
 			http.StatusBadRequest,
-			gin.H{
-				"error": "Invalid ID",
-			},
+			"BadRequest",
+			"Invalid ID provided",
 		)
 		return
 	}
 
 	for i, note := range notes {
 		if noteId == note.ID {
-			c.JSON(
+			responses.OK(
+				c,
 				http.StatusOK,
 				notes[i],
 			)
@@ -41,11 +44,11 @@ func GetNote(c *gin.Context) {
 		}
 	}
 
-	c.JSON(
+	responses.Fail(
+		c,
 		http.StatusNotFound,
-		gin.H{
-			"error": "Note not found",
-		},
+		"NotFound",
+		"Note is not found",
 	)
 }
 
@@ -53,11 +56,11 @@ func CreateNote(c *gin.Context) {
 	var newNote *models.Note
 
 	if err := c.ShouldBindBodyWithJSON(&newNote); err != nil {
-		c.JSON(
+		responses.Fail(
+			c,
 			http.StatusConflict,
-			gin.H{
-				"error": err.Error(),
-			},
+			"Conflict",
+			"Invalid schema",
 		)
 		return
 	}
@@ -66,7 +69,8 @@ func CreateNote(c *gin.Context) {
 
 	notes = append(notes, newNote)
 
-	c.JSON(
+	responses.OK(
+		c,
 		http.StatusCreated,
 		newNote,
 	)
@@ -76,11 +80,11 @@ func UpdateNote(c *gin.Context) {
 	noteId, err := uuid.Parse(c.Param("id"))
 
 	if err != nil {
-		c.JSON(
+		responses.Fail(
+			c,
 			http.StatusBadRequest,
-			gin.H{
-				"error": "Invalid ID",
-			},
+			"BadRequest",
+			"Invalid ID provided",
 		)
 		return
 	}
@@ -88,11 +92,11 @@ func UpdateNote(c *gin.Context) {
 	var updateNote *models.Note
 
 	if err := c.ShouldBindBodyWithJSON(&updateNote); err != nil {
-		c.JSON(
+		responses.Fail(
+			c,
 			http.StatusConflict,
-			gin.H{
-				"error": err.Error(),
-			},
+			"Conflict",
+			"Invalid schema",
 		)
 		return
 	}
@@ -102,7 +106,8 @@ func UpdateNote(c *gin.Context) {
 			updateNote.ID = noteId
 			notes[i] = updateNote
 
-			c.JSON(
+			responses.OK(
+				c,
 				http.StatusOK,
 				notes[i],
 			)
@@ -110,11 +115,11 @@ func UpdateNote(c *gin.Context) {
 		}
 	}
 
-	c.JSON(
+	responses.Fail(
+		c,
 		http.StatusNotFound,
-		gin.H{
-			"error": "Note not found",
-		},
+		"NotFound",
+		"Note is not found",
 	)
 }
 
@@ -122,11 +127,11 @@ func DeleteNote(c *gin.Context) {
 	noteId, err := uuid.Parse(c.Param("id"))
 
 	if err != nil {
-		c.JSON(
+		responses.Fail(
+			c,
 			http.StatusBadRequest,
-			gin.H{
-				"error": "Invalid ID",
-			},
+			"BadRequest",
+			"Invalid ID provided",
 		)
 		return
 	}
@@ -135,17 +140,19 @@ func DeleteNote(c *gin.Context) {
 		if noteId == note.ID {
 			notes = append(notes[:i], notes[i+1:]...)
 
-			c.Status(
+			responses.OK(
+				c,
 				http.StatusNoContent,
+				nil,
 			)
 			return
 		}
 	}
 
-	c.JSON(
+	responses.Fail(
+		c,
 		http.StatusNotFound,
-		gin.H{
-			"error": "Todo not found",
-		},
+		"NotFound",
+		"Note is not found",
 	)
 }
