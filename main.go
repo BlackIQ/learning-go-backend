@@ -10,7 +10,7 @@ import (
 )
 
 func init() {
-	inits.LoadDotEnv()
+	// inits.LoadDotEnv()
 	inits.ConnectDatabase()
 }
 
@@ -18,6 +18,11 @@ func main() {
 	r := router.SetupRouter()
 
 	port := os.Getenv("PORT")
+
+	if port == "" {
+		port = "80"
+	}
+
 	addr := fmt.Sprintf("0.0.0.0:%v", port)
 
 	err := r.Run(addr)

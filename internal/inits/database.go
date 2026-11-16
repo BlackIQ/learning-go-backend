@@ -5,6 +5,8 @@ import (
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+
+	"gin-basics/internal/models"
 )
 
 var DB *gorm.DB
@@ -18,4 +20,9 @@ func ConnectDatabase() {
 		log.Fatal(err)
 		panic("Failed to connect to database")
 	}
+
+	DB.AutoMigrate(
+		&models.Todo{},
+		&models.Note{},
+	)
 }

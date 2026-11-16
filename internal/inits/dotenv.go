@@ -7,7 +7,7 @@ import (
 )
 
 func LoadDotEnv() {
-	err := godotenv.Load(".env")
+	err := godotenv.Load()
 
 	if err != nil {
 		log.Fatal("\n-> Error: Loading dotenv")
