@@ -4,8 +4,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-
-	"gin-basics/internal/responses"
 )
 
 func RoleRequired() gin.HandlerFunc {
@@ -13,11 +11,11 @@ func RoleRequired() gin.HandlerFunc {
 		role := c.GetHeader("X-ROLE")
 
 		if role != "admin" {
-			responses.Fail(
-				c,
-				http.StatusForbidden,
-				"Forbidden",
-				"You are not allowrd",
+			c.AbortWithStatusJSON(
+				http.StatusUnauthorized,
+				gin.H{
+					"message": "Unauthorized",
+				},
 			)
 			return
 		}

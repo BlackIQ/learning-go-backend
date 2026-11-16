@@ -14,7 +14,6 @@ func Request() gin.HandlerFunc {
 		}
 
 		c.Set("RequestID", requestID)
-		c.Header("X-Request-ID", requestID)
 
 		c.Next()
 	}
