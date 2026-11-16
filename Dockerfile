@@ -2,26 +2,30 @@ FROM golang:1.26-alpine AS build
 
 WORKDIR /app
 
-COPY go.mod go.sum vendor ./
+RUN apk add --no-cache gcc musl-dev
 
-RUN go mod download && go mod verify
+COPY go.mod go.sum ./
+COPY vendor ./vendor
 
-COPY . .
+RUN CGO_ENABLED=1 go build -mod=vendor -o /app/gin-basics .
 
-RUN apk --no-cache gcc
+FROM alpine:latest
 
-RUN CGO_ENABLED=1 go build -o /app/gin-basics .
+RUN apk add --no-cache ca-certificates tzdata
 
-FROM alpine:latest AS runtime
-
-RUN apk --no-cache add ca-certificates tzdata
+WORKDIR /app
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-COPY --from=build /app/gin-basics /gin-basics
+RUN mkdir -p /app/data && chown -R appuser:appgroup /app
+
+COPY --from=build /app/gin-basics /app/gin-basics
 
 USER appuser
 
 EXPOSE 8080
 
-ENTRYPOINT ["/gin-basics"]
+ENV PORT=8080
+ENV DB_PATH=/app/data/go.db
+
+ENTRYPOINT ["/app/gin-basics"]
