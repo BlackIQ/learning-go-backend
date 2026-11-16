@@ -2,12 +2,23 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 
 	"gin-basics/internal/handlers"
 	"gin-basics/internal/middlewares"
+	"gin-basics/internal/repositories"
+	"gin-basics/internal/services"
 )
 
-func SetupRouter() *gin.Engine {
+func SetupRouter(db *gorm.DB) *gin.Engine {
+	todoRepository := repositories.NewTodoRepository(db)
+	todoServices := services.NewTodoService(todoRepository)
+	todoHandler := handlers.NewTodoHandler(todoServices)
+
+	noteRepository := repositories.NewNoteRepository(db)
+	noteServices := services.NewNoteService(noteRepository)
+	noteHandler := handlers.NewNoteHandler(noteServices)
+
 	router := gin.Default()
 
 	router.Use(middlewares.Request())
@@ -18,21 +29,21 @@ func SetupRouter() *gin.Engine {
 
 	todoRouter := apiRouter.Group("/todos")
 
-	todoRouter.GET("", handlers.ListTodos)
-	todoRouter.GET("/:id", handlers.GetTodo)
-	todoRouter.POST("", handlers.CreateTodo)
-	todoRouter.PATCH("/:id", handlers.UpdateTodo)
-	todoRouter.DELETE("/:id", handlers.DeleteTodo)
+	todoRouter.GET("", todoHandler.ListTodos)
+	// todoRouter.GET("/:id", todoHandler.GetTodo)
+	// todoRouter.POST("", todoHandler.CreateTodo)
+	// todoRouter.PATCH("/:id", todoHandler.UpdateTodo)
+	// todoRouter.DELETE("/:id", todoHandler.DeleteTodo)
 
 	noteRouter := apiRouter.Group("/notes")
 
 	noteRouter.Use(middlewares.RoleRequired())
 
-	noteRouter.GET("", handlers.ListNotes)
-	noteRouter.GET("/:id", handlers.GetNote)
-	noteRouter.POST("", handlers.CreateNote)
-	noteRouter.PATCH("/:id", handlers.UpdateNote)
-	noteRouter.DELETE("/:id", handlers.DeleteNote)
+	noteRouter.GET("", noteHandler.ListNotes)
+	// noteRouter.GET("/:id", noteHandler.GetNote)
+	// noteRouter.POST("", noteHandler.CreateNote)
+	// noteRouter.PATCH("/:id", noteHandler.UpdateNote)
+	// noteRouter.DELETE("/:id", noteHandler.DeleteNote)
 
 	return router
 }
