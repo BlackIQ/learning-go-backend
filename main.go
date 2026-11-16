@@ -10,12 +10,13 @@ import (
 )
 
 func init() {
-	// inits.LoadDotEnv()
-	inits.ConnectDatabase()
+	inits.LoadDotEnv()
 }
 
 func main() {
-	r := router.SetupRouter()
+	db := inits.ConnectDatabase()
+
+	r := router.SetupRouter(db)
 
 	port := os.Getenv("PORT")
 
