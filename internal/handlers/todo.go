@@ -1,18 +1,38 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 
+	"gin-basics/internal/database"
 	"gin-basics/internal/dto"
+	"gin-basics/internal/models"
 )
 
 func AllTodos(c *gin.Context) {
+	db := database.GetDB()
+
+	var todos []models.Todo
+
+	dbTodos := db.Find(&todos)
+
+	if dbTodos.Error != nil {
+		c.AbortWithStatusJSON(
+			http.StatusInternalServerError,
+			gin.H{
+				"message": "Database error",
+			},
+		)
+		return
+	}
+
 	c.JSON(
 		http.StatusOK,
-		[]dto.TodoResponse{},
+		todos,
 	)
 }
 
@@ -24,7 +44,32 @@ func OneTodo(c *gin.Context) {
 			http.StatusBadRequest,
 			gin.H{
 				"message": "Invalid ID",
-				"error":   err.Error(),
+			},
+		)
+		return
+	}
+
+	db := database.GetDB()
+
+	var todo models.Todo
+
+	result := db.Where("id = ?", todoID).First(&todo)
+
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		c.AbortWithStatusJSON(
+			http.StatusNotFound,
+			gin.H{
+				"message": "Todo not found",
+			},
+		)
+		return
+	}
+
+	if result.Error != nil {
+		c.AbortWithStatusJSON(
+			http.StatusInternalServerError,
+			gin.H{
+				"message": "Database error",
 			},
 		)
 		return
@@ -32,9 +77,7 @@ func OneTodo(c *gin.Context) {
 
 	c.JSON(
 		http.StatusOK,
-		gin.H{
-			"id": todoID,
-		},
+		todo,
 	)
 }
 
@@ -46,17 +89,34 @@ func CreateTodo(c *gin.Context) {
 			http.StatusBadRequest,
 			gin.H{
 				"message": "Invalid Body",
-				"error":   err.Error(),
+			},
+		)
+		return
+	}
+
+	db := database.GetDB()
+
+	todo := models.Todo{
+		ID:      uuid.New(),
+		Title:   todoData.Title,
+		Details: todoData.Details,
+	}
+
+	result := db.Create(&todo)
+
+	if result.Error != nil {
+		c.AbortWithStatusJSON(
+			http.StatusInternalServerError,
+			gin.H{
+				"message": "Database error",
 			},
 		)
 		return
 	}
 
 	c.JSON(
-		http.StatusOK,
-		gin.H{
-			"data": todoData,
-		},
+		http.StatusCreated,
+		todo,
 	)
 }
 
@@ -68,7 +128,6 @@ func UpdateTodo(c *gin.Context) {
 			http.StatusBadRequest,
 			gin.H{
 				"message": "Invalid ID",
-				"error":   err.Error(),
 			},
 		)
 		return
@@ -81,7 +140,54 @@ func UpdateTodo(c *gin.Context) {
 			http.StatusBadRequest,
 			gin.H{
 				"message": "Invalid Body",
-				"error":   err.Error(),
+			},
+		)
+		return
+	}
+
+	db := database.GetDB()
+
+	var todo models.Todo
+
+	result := db.Where("id = ?", todoID).First(&todo)
+
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		c.AbortWithStatusJSON(
+			http.StatusNotFound,
+			gin.H{
+				"message": "Todo not found",
+			},
+		)
+		return
+	}
+
+	if result.Error != nil {
+		c.AbortWithStatusJSON(
+			http.StatusInternalServerError,
+			gin.H{
+				"message": "Database error",
+			},
+		)
+		return
+	}
+
+	updates := map[string]any{}
+
+	if updateTodo.Title != nil {
+		updates["Title"] = *updateTodo.Title
+	}
+
+	if updateTodo.Details != nil {
+		updates["details"] = *updateTodo.Details
+	}
+
+	result = db.Model(&todo).Updates(updates)
+
+	if result.Error != nil {
+		c.AbortWithStatusJSON(
+			http.StatusInternalServerError,
+			gin.H{
+				"message": "Database error",
 			},
 		)
 		return
@@ -89,10 +195,7 @@ func UpdateTodo(c *gin.Context) {
 
 	c.JSON(
 		http.StatusOK,
-		gin.H{
-			"id":   todoID,
-			"data": updateTodo,
-		},
+		todo,
 	)
 }
 
@@ -104,16 +207,50 @@ func DeleteTodo(c *gin.Context) {
 			http.StatusBadRequest,
 			gin.H{
 				"message": "Invalid ID",
-				"error":   err.Error(),
 			},
 		)
 		return
 	}
 
-	c.JSON(
-		http.StatusOK,
-		gin.H{
-			"id": todoID,
-		},
+	db := database.GetDB()
+
+	var todo models.Todo
+
+	result := db.Where("id = ?", todoID).First(&todo)
+
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		c.AbortWithStatusJSON(
+			http.StatusNotFound,
+			gin.H{
+				"message": "Todo not found",
+			},
+		)
+		return
+	}
+
+	if result.Error != nil {
+		c.AbortWithStatusJSON(
+			http.StatusInternalServerError,
+			gin.H{
+				"message": "Database error",
+			},
+		)
+		return
+	}
+
+	result = db.Delete(&todo)
+
+	if result.RowsAffected == 0 {
+		c.AbortWithStatusJSON(
+			http.StatusNotFound,
+			gin.H{
+				"message": "Todo not found",
+			},
+		)
+		return
+	}
+
+	c.Status(
+		http.StatusNoContent,
 	)
 }
