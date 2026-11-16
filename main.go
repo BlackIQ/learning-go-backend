@@ -11,12 +11,11 @@ import (
 
 func init() {
 	inits.LoadDotEnv()
+	inits.ConnectDatabase()
 }
 
 func main() {
-	db := inits.ConnectDatabase()
-
-	r := router.SetupRouter(db)
+	r := router.SetupRouter()
 
 	port := os.Getenv("PORT")
 
