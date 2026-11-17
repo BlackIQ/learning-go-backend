@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"net/http"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
 	"gin-basics/internal/handlers"
@@ -12,6 +13,8 @@ import (
 
 func SetupRouter(diskFS *embed.FS) *gin.Engine {
 	router := gin.Default()
+
+	router.Use(cors.Default())
 
 	// Frontend
 	frontendFS, err := fs.Sub(*diskFS, "frontend/dist")
