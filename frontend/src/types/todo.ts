@@ -13,5 +13,5 @@ export interface CreateTodoInterface {
 export interface UpdateTodoInterface {
   title?: string;
   details?: string;
-  isDone?: boolean;
+  // isDone?: boolean;
 }
