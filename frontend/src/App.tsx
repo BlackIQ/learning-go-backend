@@ -1,4 +1,24 @@
+import { useState, useEffect } from "react";
+
+import { listTodos } from "./api/todo";
+
 function App() {
+  const [todos, setTodos] = useState([]);
+
+  const getTodos = async () => {
+    try {
+      const data = await listTodos();
+
+      console.log(data);
+    } catch {
+      console.log("Issues");
+    }
+  };
+
+  useEffect(() => {
+    getTodos();
+  }, []);
+
   return (
     <div>
       <h1>Hello React!</h1>
@@ -13,46 +33,6 @@ function App() {
       >
         Click on me bitch!
       </button>
-
-      <form>
-        <div className="mb-3">
-          <label htmlFor="exampleInputEmail1" className="form-label">
-            Email address
-          </label>
-          <input
-            type="email"
-            className="form-control"
-            id="exampleInputEmail1"
-            aria-describedby="emailHelp"
-          />
-          <div id="emailHelp" className="form-text">
-            We'll never share your email with anyone else.
-          </div>
-        </div>
-        <div className="mb-3">
-          <label htmlFor="exampleInputPassword1" className="form-label">
-            Password
-          </label>
-          <input
-            type="password"
-            className="form-control"
-            id="exampleInputPassword1"
-          />
-        </div>
-        <div className="mb-3 form-check">
-          <input
-            type="checkbox"
-            className="form-check-input"
-            id="exampleCheck1"
-          />
-          <label className="form-check-label" htmlFor="exampleCheck1">
-            Check me out
-          </label>
-        </div>
-        <button type="submit" className="btn btn-primary">
-          Submit
-        </button>
-      </form>
     </div>
   );
 }
