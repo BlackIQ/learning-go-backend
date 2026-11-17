@@ -1,17 +1,46 @@
 package router
 
 import (
+	"embed"
+	"io/fs"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 
 	"gin-basics/internal/handlers"
-	"gin-basics/internal/middlewares"
 )
 
-func SetupRouter() *gin.Engine {
+func SetupRouter(diskFS *embed.FS) *gin.Engine {
 	router := gin.Default()
 
-	router.Use(middlewares.Request())
+	// Frontend
+	frontendFS, err := fs.Sub(*diskFS, "frontend/dist")
+	if err != nil {
+		panic(err)
+	}
 
+	assetsFS, err := fs.Sub(frontendFS, "assets")
+	if err != nil {
+		panic(err)
+	}
+
+	router.StaticFS("/assets", http.FS(assetsFS))
+
+	router.GET("/", func(c *gin.Context) {
+		index, err := fs.ReadFile(frontendFS, "index.html")
+
+		if err != nil {
+			c.AbortWithStatus(
+				http.StatusInternalServerError,
+			)
+
+			return
+		}
+
+		c.Data(http.StatusOK, "text/html; charset=utf-8", index)
+	})
+
+	// Backend
 	apiRouter := router.Group("/api")
 
 	todoRouter := apiRouter.Group("/todos")

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"fmt"
 	"log"
 	"os"
@@ -9,13 +10,16 @@ import (
 	"gin-basics/internal/router"
 )
 
+//go:embed all:frontend/dist
+var distFS embed.FS
+
 func init() {
 	inits.LoadDotEnv()
 	inits.ConnectDatabase()
 }
 
 func main() {
-	r := router.SetupRouter()
+	r := router.SetupRouter(&distFS)
 
 	port := os.Getenv("PORT")
 
