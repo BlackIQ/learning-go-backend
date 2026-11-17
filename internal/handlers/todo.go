@@ -100,6 +100,7 @@ func CreateTodo(c *gin.Context) {
 		ID:      uuid.New(),
 		Title:   todoData.Title,
 		Details: todoData.Details,
+		IsDone:  false,
 	}
 
 	result := db.Create(&newTodo)
@@ -179,6 +180,10 @@ func UpdateTodo(c *gin.Context) {
 
 	if updateTodo.Details != nil {
 		updates["details"] = *updateTodo.Details
+	}
+
+	if updateTodo.IsDone != nil {
+		updates["isDone"] = *updateTodo.IsDone
 	}
 
 	result = db.Model(&todo).Updates(updates)
