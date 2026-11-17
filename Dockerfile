@@ -12,7 +12,11 @@ COPY . .
 
 RUN go build -mod=readonly -o /app/gin-basics .
 
-FROM gcr.io/distroless/static-debian13:nonroot AS production
+FROM debian:trixie-slim AS production
+
+WORKDIR /app
+
+RUN mkdir -p /app/data
 
 COPY --from=build /app/gin-basics /app/gin-basics
 
