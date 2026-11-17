@@ -3,3 +3,5 @@ gin-basics
 .env
 
 go.db
+
+out

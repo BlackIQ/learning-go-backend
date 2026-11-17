@@ -5,3 +5,5 @@ gin-basics
 vendor
 
 go.db
+
+out
