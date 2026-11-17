@@ -1,8 +1,7 @@
+# BUILD Stage
 FROM golang:1.26-trixie AS build
 
 WORKDIR /app
-
-# RUN apk add --no-cache gcc musl-dev
 
 COPY go.mod go.sum ./
 
@@ -12,6 +11,8 @@ COPY . .
 
 RUN go build -mod=readonly -o /app/gin-basics .
 
+
+# PRODUCTION Stage
 FROM debian:trixie-slim AS production
 
 WORKDIR /app
