@@ -1,8 +1,8 @@
-FROM golang:1.26-alpine AS build
+FROM golang:1.26-trixie AS build
 
 WORKDIR /app
 
-RUN apk add --no-cache gcc musl-dev
+# RUN apk add --no-cache gcc musl-dev
 
 COPY go.mod go.sum ./
 
@@ -12,9 +12,7 @@ COPY . .
 
 RUN go build -mod=readonly -o /app/gin-basics .
 
-FROM alpine:latest
-
-RUN apk add --no-cache ca-certificates tzdata curl
+FROM gcr.io/distroless/static-debian13:nonroot AS production
 
 WORKDIR /app
 
