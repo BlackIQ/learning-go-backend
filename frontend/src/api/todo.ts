@@ -1,9 +1,9 @@
 import API from "./index";
 
-import {
-  type TodoInterface,
-  type CreateTodoInterface,
-  type UpdateTodoInterface,
+import type {
+  TodoInterface,
+  CreateTodoInterface,
+  UpdateTodoInterface,
 } from "../types/todo";
 
 const baseURL = "/todos";
