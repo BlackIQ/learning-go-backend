@@ -2,9 +2,8 @@ package database
 
 import (
 	"log"
-	"os"
 
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
 	"gin-basics/internal/models"
@@ -13,13 +12,14 @@ import (
 var db *gorm.DB
 
 func InitDB() *gorm.DB {
-	dbPath := os.Getenv("DB_PATH")
+	// dbPath := os.Getenv("DB_PATH")
+	dsn := "host=10.1.10.120 user=postgres password=9e866eeed379fac0 dbname=todogo port=5432 sslmode=disable"
 
-	if dbPath == "" {
-		dbPath = "go.db"
-	}
+	// if dbPath == "" {
+	// 	dbPath = "go.db"
+	// }
 
-	connection, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	connection, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
 		log.Fatal(err)
