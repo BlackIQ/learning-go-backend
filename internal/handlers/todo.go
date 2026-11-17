@@ -18,9 +18,9 @@ func AllTodos(c *gin.Context) {
 
 	var todos []models.Todo
 
-	dbTodos := db.Find(&todos)
+	result := db.Find(&todos)
 
-	if dbTodos.Error != nil {
+	if result.Error != nil {
 		c.AbortWithStatusJSON(
 			http.StatusInternalServerError,
 			gin.H{
@@ -96,13 +96,13 @@ func CreateTodo(c *gin.Context) {
 
 	db := database.GetDB()
 
-	todo := models.Todo{
+	newTodo := models.Todo{
 		ID:      uuid.New(),
 		Title:   todoData.Title,
 		Details: todoData.Details,
 	}
 
-	result := db.Create(&todo)
+	result := db.Create(&newTodo)
 
 	if result.Error != nil {
 		c.AbortWithStatusJSON(
@@ -116,7 +116,7 @@ func CreateTodo(c *gin.Context) {
 
 	c.JSON(
 		http.StatusCreated,
-		todo,
+		newTodo,
 	)
 }
 

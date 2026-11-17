@@ -7,10 +7,10 @@ import (
 )
 
 func LoadDotEnv() {
-	err := godotenv.Load()
+	err := godotenv.Load(".env")
 
 	if err != nil {
-		log.Fatal("\n-> Error: Loading dotenv")
-		log.Fatal(err)
+		log.Println("No .env file found, using environment variables")
+		log.Println(err)
 	}
 }
