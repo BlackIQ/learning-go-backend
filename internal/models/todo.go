@@ -12,6 +12,8 @@ type Todo struct {
 	Title     string         `gorm:"not null" json:"title"`
 	Details   string         `gorm:"not null" json:"details"`
 	IsDone    bool           `gorm:"default:false" json:"isDone"`
+	UserID    uuid.UUID      `gorm:"type:uuid;not null" json:"userId"`
+	User      User           `gorm:"foreignKey:UserID" json:"-"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
