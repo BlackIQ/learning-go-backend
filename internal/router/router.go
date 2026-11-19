@@ -58,7 +58,7 @@ func SetupRouter(diskFS *embed.FS) *gin.Engine {
 	userRouter.GET("/me", handlers.Me)
 
 	todoRouter := apiRouter.Group("/todos")
-	userRouter.Use(middlewares.AuthMiddleware())
+	todoRouter.Use(middlewares.AuthMiddleware())
 
 	todoRouter.GET("", handlers.AllTodos)
 	todoRouter.GET("/:id", handlers.OneTodo)
