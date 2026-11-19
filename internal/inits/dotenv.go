@@ -1,16 +1,20 @@
 package inits
 
 import (
+	"gin-basics/internal/config"
 	"log"
 
 	"github.com/joho/godotenv"
 )
 
-func LoadDotEnv() {
+func LoadEnv() {
 	err := godotenv.Load(".env")
 
 	if err != nil {
-		log.Println("No .env file found, using environment variables")
 		log.Println(err)
+	}
+
+	if err := config.LoadConfig(); err != nil {
+		log.Fatal(err)
 	}
 }
