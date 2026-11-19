@@ -5,10 +5,14 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+
+	"gin-basics/internal/config"
 )
 
 func GenerateJWT(userID string) (string, error) {
-	secret := []byte("testinggg")
+	cfg := config.GetConfig()
+
+	secret := []byte(cfg.Secret)
 
 	claims := jwt.RegisteredClaims{
 		Subject:   userID,
@@ -26,7 +30,9 @@ func GenerateJWT(userID string) (string, error) {
 }
 
 func VerifyJWT(tokenString string) (string, error) {
-	secret := []byte("testinggg")
+	cfg := config.GetConfig()
+
+	secret := []byte(cfg.Secret)
 
 	token, err := jwt.ParseWithClaims(
 		tokenString,
