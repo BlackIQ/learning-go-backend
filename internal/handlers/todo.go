@@ -14,11 +14,35 @@ import (
 )
 
 func AllTodos(c *gin.Context) {
+	userValue, exists := c.Get("user")
+
+	if !exists {
+		c.AbortWithStatusJSON(
+			http.StatusUnauthorized,
+			gin.H{
+				"message": "Unauthorized",
+			},
+		)
+		return
+	}
+
+	user, ok := userValue.(*models.User)
+
+	if !ok {
+		c.AbortWithStatusJSON(
+			http.StatusInternalServerError,
+			gin.H{
+				"message": "Invalid user context",
+			},
+		)
+		return
+	}
+
 	db := database.GetDB()
 
 	var todos []models.Todo
 
-	result := db.Find(&todos)
+	result := db.Where("user_id = ?", user.ID).Find(&todos)
 
 	if result.Error != nil {
 		c.AbortWithStatusJSON(
@@ -49,11 +73,35 @@ func OneTodo(c *gin.Context) {
 		return
 	}
 
+	userValue, exists := c.Get("user")
+
+	if !exists {
+		c.AbortWithStatusJSON(
+			http.StatusUnauthorized,
+			gin.H{
+				"message": "Unauthorized",
+			},
+		)
+		return
+	}
+
+	user, ok := userValue.(*models.User)
+
+	if !ok {
+		c.AbortWithStatusJSON(
+			http.StatusInternalServerError,
+			gin.H{
+				"message": "Invalid user context",
+			},
+		)
+		return
+	}
+
 	db := database.GetDB()
 
 	var todo models.Todo
 
-	result := db.Where("id = ?", todoID).First(&todo)
+	result := db.Where("id = ? AND user_id", todoID, user.ID).First(&todo)
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		c.AbortWithStatusJSON(
@@ -94,12 +142,37 @@ func CreateTodo(c *gin.Context) {
 		return
 	}
 
+	userValue, exists := c.Get("user")
+
+	if !exists {
+		c.AbortWithStatusJSON(
+			http.StatusUnauthorized,
+			gin.H{
+				"message": "Unauthorized",
+			},
+		)
+		return
+	}
+
+	user, ok := userValue.(*models.User)
+
+	if !ok {
+		c.AbortWithStatusJSON(
+			http.StatusInternalServerError,
+			gin.H{
+				"message": "Invalid user context",
+			},
+		)
+		return
+	}
+
 	db := database.GetDB()
 
 	newTodo := models.Todo{
 		ID:      uuid.New(),
 		Title:   todoData.Title,
 		Details: todoData.Details,
+		UserID:  user.ID,
 		IsDone:  false,
 	}
 
@@ -146,11 +219,35 @@ func UpdateTodo(c *gin.Context) {
 		return
 	}
 
+	userValue, exists := c.Get("user")
+
+	if !exists {
+		c.AbortWithStatusJSON(
+			http.StatusUnauthorized,
+			gin.H{
+				"message": "Unauthorized",
+			},
+		)
+		return
+	}
+
+	user, ok := userValue.(*models.User)
+
+	if !ok {
+		c.AbortWithStatusJSON(
+			http.StatusInternalServerError,
+			gin.H{
+				"message": "Invalid user context",
+			},
+		)
+		return
+	}
+
 	db := database.GetDB()
 
 	var todo models.Todo
 
-	result := db.Where("id = ?", todoID).First(&todo)
+	result := db.Where("id = ? AND user_id = ?", todoID, user.ID).First(&todo)
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		c.AbortWithStatusJSON(
@@ -217,11 +314,35 @@ func DeleteTodo(c *gin.Context) {
 		return
 	}
 
+	userValue, exists := c.Get("user")
+
+	if !exists {
+		c.AbortWithStatusJSON(
+			http.StatusUnauthorized,
+			gin.H{
+				"message": "Unauthorized",
+			},
+		)
+		return
+	}
+
+	user, ok := userValue.(*models.User)
+
+	if !ok {
+		c.AbortWithStatusJSON(
+			http.StatusInternalServerError,
+			gin.H{
+				"message": "Invalid user context",
+			},
+		)
+		return
+	}
+
 	db := database.GetDB()
 
 	var todo models.Todo
 
-	result := db.Where("id = ?", todoID).First(&todo)
+	result := db.Where("id = ? AND user_id = ?", todoID, user.ID).First(&todo)
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		c.AbortWithStatusJSON(

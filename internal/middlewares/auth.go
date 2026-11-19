@@ -57,21 +57,21 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		resultFind := db.Where("id = ?", userID).First(&user)
 
-		if resultFind.Error != nil {
-			c.AbortWithStatusJSON(
-				http.StatusForbidden,
-				gin.H{
-					"message": resultFind.Error.Error(),
-				},
-			)
-			return
-		}
-
 		if errors.Is(resultFind.Error, gorm.ErrRecordNotFound) {
 			c.AbortWithStatusJSON(
 				http.StatusUnauthorized,
 				gin.H{
 					"message": "Unauthorized",
+				},
+			)
+			return
+		}
+
+		if resultFind.Error != nil {
+			c.AbortWithStatusJSON(
+				http.StatusInternalServerError,
+				gin.H{
+					"message": "Database error",
 				},
 			)
 			return
