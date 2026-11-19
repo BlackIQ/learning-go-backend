@@ -101,7 +101,7 @@ func OneTodo(c *gin.Context) {
 
 	var todo models.Todo
 
-	result := db.Where("id = ? AND user_id", todoID, user.ID).First(&todo)
+	result := db.Where("id = ? AND user_id = ?", todoID, user.ID).First(&todo)
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		c.AbortWithStatusJSON(
