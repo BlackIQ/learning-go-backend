@@ -4,8 +4,8 @@ import (
 	"embed"
 	"fmt"
 	"log"
-	"os"
 
+	"gin-basics/internal/config"
 	"gin-basics/internal/inits"
 	"gin-basics/internal/router"
 )
@@ -14,20 +14,16 @@ import (
 var distFS embed.FS
 
 func init() {
-	inits.LoadDotEnv()
+	inits.LoadEnv()
 	inits.ConnectDatabase()
 }
 
 func main() {
+	cfg := config.GetConfig()
+
 	r := router.SetupRouter(&distFS)
 
-	port := os.Getenv("PORT")
-
-	if port == "" {
-		port = "8008"
-	}
-
-	addr := fmt.Sprintf("0.0.0.0:%v", port)
+	addr := fmt.Sprintf("0.0.0.0:%v", cfg.Port)
 
 	err := r.Run(addr)
 
