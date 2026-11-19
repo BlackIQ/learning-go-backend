@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"gin-basics/internal/handlers"
+	"gin-basics/internal/middlewares"
 )
 
 func SetupRouter(diskFS *embed.FS) *gin.Engine {
@@ -46,7 +47,18 @@ func SetupRouter(diskFS *embed.FS) *gin.Engine {
 	// Backend
 	apiRouter := router.Group("/api")
 
+	authRouter := apiRouter.Group("/auth")
+
+	authRouter.POST("/signup", handlers.Signup)
+	authRouter.POST("/signin", handlers.Signin)
+
+	userRouter := apiRouter.Group("/users")
+	userRouter.Use(middlewares.AuthMiddleware())
+
+	userRouter.GET("/me", handlers.Me)
+
 	todoRouter := apiRouter.Group("/todos")
+	userRouter.Use(middlewares.AuthMiddleware())
 
 	todoRouter.GET("", handlers.AllTodos)
 	todoRouter.GET("/:id", handlers.OneTodo)
